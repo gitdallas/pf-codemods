@@ -29,7 +29,7 @@ const warningRules = [
 ];
 
 // rules that will run before other rules (move to deprecated?)
-const setupRules = [];
+const setupRules = ['2test'];
 
 // rules that will run after other rules (cleanup imports?)
 const cleanupRules = [];
