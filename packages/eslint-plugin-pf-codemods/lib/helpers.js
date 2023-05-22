@@ -82,7 +82,7 @@ function moveSpecifiers(
           ...existingToPackageSpecifiers,
           ...newAliasToPackageSpecifiers,
         ].join(`,\n\t`)}\n} from '${modifiedToPackage || toPackage}';`;
-
+console.log(newToPackageImportDeclaration);
         context.report({
           node,
           message:
@@ -134,12 +134,13 @@ function moveSpecifiers(
           },
         });
       },
-      JSXElement(node) {
-        if (!aliasSuffix) return;
+      JSXIdentifier(node) {
+        node = node.parent;
+        if (!aliasSuffix || !['JSXOpeningElement', 'JSXClosingElement'].includes(node.type)) return;
 
-        const openingElement = node.openingElement?.name;
+        const openingElement = node.name;
         const elementName = openingElement.object?.name || openingElement.name;
-
+console.log(elementName);
         // Fixer for importsToMove objects with "component" type
         if (
           importSpecifiersToMove.some(
@@ -162,21 +163,22 @@ function moveSpecifiers(
                   `${elementName}${aliasSuffix}`
                 ),
               ];
-              if (!node.openingElement.selfClosing) {
-                fixes.push(
-                  fixer.replaceText(
-                    node.closingElement.name,
-                    `${node.openingElement.name.name}${aliasSuffix}`
-                  )
-                );
-              }
+              // if (!node.selfClosing) {
+              //   fixes.push(
+              //     fixer.replaceText(
+              //       node.parent.closingElement.name,
+              //       `${node.name.name}${aliasSuffix}`
+              //     )
+              //   );
+              // }
+              console.log(fixes);
               return fixes;
             },
           });
         }
 
         // Fixer for importsToMove objects with non-"component" type
-        const existingPropsToUpdate = node.openingElement.attributes.filter(
+        const existingPropsToUpdate = node.attributes?.filter(
           (attr) => {
             if (attr.value) {
               const propValue =
@@ -186,7 +188,7 @@ function moveSpecifiers(
             }
           }
         );
-        if (existingPropsToUpdate.length) {
+        if (existingPropsToUpdate?.length) {
           existingPropsToUpdate.forEach((propToUpdate) => {
             const currentPropToUpdate =
               propToUpdate.value?.expression?.object ||
